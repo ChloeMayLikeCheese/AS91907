@@ -1,0 +1,23 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+/build
+
+# Ignore Kotlin plugin data
+.kotlin
+
+.vscode
+gradle
+gradle.properties
+gradlew
+gradlew.bat
+runner.sh
+settings.gradle
+app/build.gradle
+app/src/test
+app/src/main/resources
+app/build/classes
+app/build/generated
+app/build/resources
+app/build/tmp
