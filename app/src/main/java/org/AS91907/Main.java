@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 19\05\2026
+Date: 20\05\2026
 */
 package org.AS91907;
 
@@ -39,6 +39,7 @@ public class Main {
             boolean isReading = true;
             while (isReading) {
                 terminal.puts(Capability.clear_screen); // Clear the screen
+                terminal.writer().flush();
 
                 Operation op = bindingReader.readBinding(keyMap, null, false); // Read the keybindings
                 if (op != null) {
@@ -57,7 +58,7 @@ public class Main {
 
     // To clear an annoying warning that appears when you run the .jar without native access enabled, added in recent versions for presumably security reasons? im unsure
     public static void checkNativeAccess(String[] args) throws URISyntaxException, InterruptedException, IOException {
-        // Check if native access is enabled by checking the java -jar arguments
+        // Check if native access is enabled by checking the java -jar arguments via the runtime enviroment
         boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
                 .anyMatch(arg -> arg.contains("--enable-native-access"));
 
