@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 21\05\2026
+Date: 22\05\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -41,7 +41,6 @@ public class Main {
             while (isReading) {
                 terminal.puts(Capability.clear_screen); // Clear the screen
                 terminal.writer().flush();
-                System.out.println(Main.class.getProtectionDomain().toString());
                 Operation op = bindingReader.readBinding(keyMap, null, false); // Read the keybindings
                 if (op != null) {
                     switch (op) {
@@ -97,13 +96,13 @@ Notes:
                 The .stream() function orders and outputs ("streams") the arguments in a way that java can look at them efficiently.
                 The .anyMatch() function searches the streamed data for any conditions passed in the functions arguments
                 The 'arg -> arg.contains("--enable-native-access")' argument passed in the .anyMatch() function is a condition that checks the the input arguments of the program and checks wether or not it contains the --enable-native-access flag.
-                Source: 
+                Sources: https://stackoverflow.com/questions/1518213/read-java-jvm-startup-parameters-eg-xmx/1518250#1518250
 
             #1.2    
                 Main.class.getProtectionDomain() gets the ProtectionDomain of the main class, a ProtectionDomain contains information about where the class is and its permissions.
                 This is used as it gets the full path to the jar (or any runtime environment) that its running from.
                 The .getCodeSource() function then returns the source of the ProtectionDomain and .getLocation() gets just the location of it.
                 The .toURI() function properly formats it for use as a file path by handling spaces, special characters and things like that.
-                Source: https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
+                Sources: https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
         I have used pretty much the exact same function for modifying the runtime enviroment in previous projects, but as many original sources as I can find have been provided. 
 */
