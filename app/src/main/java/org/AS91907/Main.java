@@ -1,11 +1,12 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 20\05\2026
+Date: 21\05\2026
+Notes are located at the bottom of the file
 */
 package org.AS91907;
 
-// Base imports
+import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.URISyntaxException;
@@ -40,7 +41,7 @@ public class Main {
             while (isReading) {
                 terminal.puts(Capability.clear_screen); // Clear the screen
                 terminal.writer().flush();
-
+                System.out.println(Main.class.getProtectionDomain().toString());
                 Operation op = bindingReader.readBinding(keyMap, null, false); // Read the keybindings
                 if (op != null) {
                     switch (op) {
@@ -56,10 +57,11 @@ public class Main {
         }
     }
 
-    // To clear an annoying warning that appears when you run the .jar without native access enabled, added in recent versions for presumably security reasons? im unsure
+    // To clear an annoying warning that appears when you run the .jar without native access enabled, added in recent versions for presumably security reasons
+    // See note #1 for details
     public static void checkNativeAccess(String[] args) throws URISyntaxException, InterruptedException, IOException {
-        // Check if native access is enabled by checking the java -jar arguments via the runtime enviroment
-        boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+        // Check if native access is enabled by checking the java -jar arguments via the runtime environment
+        boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream() // See note #1.1
                 .anyMatch(arg -> arg.contains("--enable-native-access"));
 
         if (nativeAccessEnabled) { // Just return if native access is enabled
@@ -67,8 +69,8 @@ public class Main {
         }
         System.out.println("Native Access is not enabled. Restarting with native access enabled...");
         // Get the path to the JAR
-        java.io.File jarFile = new java.io.File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-        String jarPath = jarFile.getAbsolutePath();
+        File jarFile = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()); // See note #1.2
+        String jarPath = jarFile.getAbsolutePath(); // Convert to string
 
         // Create the command for restarting the application with native access enabled
         List<String> command = new ArrayList<>(); // All the arguments must be in seperate strings
@@ -78,10 +80,30 @@ public class Main {
         command.add(jarPath);
 
         // Start the new process and exit the current one
-        ProcessBuilder pb = new ProcessBuilder(command).inheritIO();
-        Process process = pb.start();
-        System.out.println("Restarted");
-        System.exit(process.waitFor());
+        ProcessBuilder pb = new ProcessBuilder(command).inheritIO(); // Create the process
+        Process process = pb.start(); //Start it
+        System.out.println("Restarting...");
+        System.exit(process.waitFor()); // Terminate current process and make the new process wait until the old one is terminated
 
     }
 }
+
+/* 
+Notes:
+    Note #1:
+            #1.1ManagementFactory
+                ManagementFactory.getRuntimeMXBean() looks inside the JVM to see details about how the program was run. 
+                The .getInputArguments() function retrives the arguments that the program was run with.
+                The .stream() function orders and outputs ("streams") the arguments in a way that java can look at them efficiently.
+                The .anyMatch() function searches the streamed data for any conditions passed in the functions arguments
+                The 'arg -> arg.contains("--enable-native-access")' argument passed in the .anyMatch() function is a condition that checks the the input arguments of the program and checks wether or not it contains the --enable-native-access flag.
+                Source: 
+
+            #1.2    
+                Main.class.getProtectionDomain() gets the ProtectionDomain of the main class, a ProtectionDomain contains information about where the class is and its permissions.
+                This is used as it gets the full path to the jar (or any runtime environment) that its running from.
+                The .getCodeSource() function then returns the source of the ProtectionDomain and .getLocation() gets just the location of it.
+                The .toURI() function properly formats it for use as a file path by handling spaces, special characters and things like that.
+                Source: https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
+        I have used pretty much the exact same function for modifying the runtime enviroment in previous projects, but as many original sources as I can find have been provided. 
+*/
