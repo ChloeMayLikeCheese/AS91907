@@ -30,7 +30,7 @@ public class Main {
 
     public static void main(String[] args)
             throws IOException, InterruptedException, URISyntaxException, InvalidAudioFormatException {
-        //checkNativeAccess(args);
+        checkNativeAccess(args);
         try (Terminal terminal = TerminalBuilder.builder() // Create the terminal
                 .name("mp3 player") // Name the terminal
                 .jansi(true) // Enable jansi for compatibility with ANSI for windows
@@ -38,8 +38,10 @@ public class Main {
             terminal.enterRawMode(); // Set the terminal to raw input mode, so it is always listening to input
             BindingReader bindingReader = new BindingReader(terminal.reader()); // Set up the BindingReader
             KeyMap<Operation> keyMap = new KeyMap<>(); // Set up the KeyMap
+
             // KeyMap bindings
             keyMap.bind(Operation.DEBUG_CLEAR, "C");
+
             // Main input loop
             boolean isReading = true;
             while (isReading) {
