@@ -40,9 +40,6 @@ public class Main {
             KeyMap<Operation> keyMap = new KeyMap<>(); // Set up the KeyMap
             // KeyMap bindings
             keyMap.bind(Operation.DEBUG_CLEAR, "C");
-            M3u test = new M3u("test");
-            test.createPlaylist();
-            test.addAll("test");
             // Main input loop
             boolean isReading = true;
             while (isReading) {
