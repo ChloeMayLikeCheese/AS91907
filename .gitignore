@@ -22,3 +22,6 @@ app/build/generated
 app/build/resources
 app/build/tmp
 eclipse-formatter.xml
+library/
+test
+playlists
