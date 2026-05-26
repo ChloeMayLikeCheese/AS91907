@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Class for creating and managing .m3u playlist files
-Date: 25\05\2026
+Date: 26\05\2026
 */
 package org.AS91907;
 
@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,16 +57,21 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
 
     // Functions for adding a single song to the m3u file
     public void add(Song song) throws IOException {
-        if (playlist = true) { // Check to see if the m3u file is a playlist, if so copy the added files to the playlist
-            File dest = new File(parentDir.getPath() + "/" + song.getFileName()); // Create the destination file
-            Path destPath = Paths.get(dest.getPath()); // Get the destination and source paths, but for java.nio.file 
-            Path sourcePath = Paths.get(song.getPath());
-            Files.copy(sourcePath, destPath, StandardCopyOption.COPY_ATTRIBUTES); // Copy the files over, Source: https://stackoverflow.com/questions/16433915/how-to-copy-file-from-one-location-to-another-location (I got COPY_ATTRIBUTES from reading the Docs here: https://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html#copy(java.nio.file.Path,%20java.nio.file.Path,%20java.nio.file.CopyOption...))
-            
+        try {
+            if (playlist = true) { // Check to see if the m3u file is a playlist, if so copy the added files to the playlist
+                File dest = new File(parentDir.getPath() + "/" + song.getFileName()); // Create the destination file
+                Path destPath = Paths.get(dest.getPath()); // Get the destination and source paths, but for java.nio.file 
+                Path sourcePath = Paths.get(song.getPath());
+                Files.copy(sourcePath, destPath, StandardCopyOption.COPY_ATTRIBUTES); // Copy the files over, Source: https://stackoverflow.com/questions/16433915/how-to-copy-file-from-one-location-to-another-location (I got COPY_ATTRIBUTES from reading the Docs here: https://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html#copy(java.nio.file.Path,%20java.nio.file.Path,%20java.nio.file.CopyOption...))
+
+            }
+        } catch (FileAlreadyExistsException e) {
         }
-        m3uWriter.newLine(); // Create a new line with the BufferedReader
-        m3uWriter.write(song.getFileName()); // Write the song file to the m3u, I'll do formatting later 
+        m3uWriter.newLine();
+        m3uWriter.newLine();
+        m3uWriter.write("#EXTINF:60," + song.getTitle() + "\n" + song.getFileName()); // Write the song file to the m3u, I'll do formatting later 
         m3uWriter.flush();
+
     }
 
     public void add(File song) throws IOException, InvalidAudioFormatException {

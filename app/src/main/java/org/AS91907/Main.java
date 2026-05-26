@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 25\05\2026
+Date: 26\05\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -20,16 +20,18 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp.Capability;
 
+import javazoom.jl.decoder.JavaLayerException;
+
 public class Main {
     public static File library = new File("library/");
     public static File playlists = new File("playlists/");
 
     enum Operation {
-        DEBUG_CLEAR
+        DEBUG_CLEAR, CREATE_PLAYLIST
     }
 
-    public static void main(String[] args)
-            throws IOException, InterruptedException, URISyntaxException, InvalidAudioFormatException {
+    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException,
+            InvalidAudioFormatException, JavaLayerException {
         checkNativeAccess(args);
         try (Terminal terminal = TerminalBuilder.builder() // Create the terminal
                 .name("mp3 player") // Name the terminal
@@ -41,6 +43,18 @@ public class Main {
 
             // KeyMap bindings
             keyMap.bind(Operation.DEBUG_CLEAR, "C");
+            keyMap.bind(Operation.CREATE_PLAYLIST, "c");
+
+            // M3u test = new M3u("test");
+            // test.createPlaylist();
+            // test.addAll("test");
+
+            // Song a = new Song("test/a.mp3");
+            // terminal.writer().println();
+            // terminal.writer().flush();
+            // a.play();
+            // Thread.sleep(1000);
+            // a.stop();
 
             // Main input loop
             boolean isReading = true;
@@ -53,12 +67,15 @@ public class Main {
                 }
                 terminal.puts(Capability.clear_screen); // Clear the screen
                 terminal.writer().flush();
+
                 Operation op = bindingReader.readBinding(keyMap, null, false); // Read the keybindings
                 if (op != null) {
                     switch (op) {
                     case DEBUG_CLEAR -> {
                         deleteDir(library);
                         deleteDir(playlists);
+                    }
+                    case CREATE_PLAYLIST -> {
                     }
                     }
                 }
@@ -110,9 +127,7 @@ public class Main {
             file.delete(); // Delete the directory
         }
     }
-
 }
-
 /* 
 Notes:
     Note #1:

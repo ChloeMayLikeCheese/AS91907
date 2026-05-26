@@ -1,21 +1,28 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Song class for setting up songs
-Date: 25\05\2026
+Date: 26\05\2026
 Notes are located at the bottom of the file
 */
 
 package org.AS91907;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.advanced.AdvancedPlayer;
+import javazoom.jl.player.advanced.PlaybackListener;
+
 public final class Song {
     private final File song;
     private final String title;
+    private AdvancedPlayer player;
 
     // Contructors for setting up the song and the title
     public Song(String song) throws IOException, InvalidAudioFormatException {
@@ -37,11 +44,11 @@ public final class Song {
         String type = Files.probeContentType(songPath); // Get the content type, See Note #1
 
         if (!type.strip().equals("audio/mpeg")) { // Make sure the content type is "mpeg" (pretty much just a mp3)
-            throw new InvalidAudioFormatException("Error: Invalid Audio file: Expected audio/mpeg but got: " + type); // Throw an exception with an error message
+            throw new InvalidAudioFormatException("Error: Invalid MIME type: Expected audio/mpeg but got: " + type); // Throw an exception with an error message
         }
     }
 
-    // Getters for the song file, title, path and the entry in the m3u file
+    // Getters for the song file, title, path and the file name
     public File getFile() {
         return song;
     }
@@ -58,6 +65,31 @@ public final class Song {
         return getFile().getPath();
     }
 
+    public void play() throws FileNotFoundException, JavaLayerException, InterruptedException {
+        FileInputStream stream = new FileInputStream(song);
+        player = new AdvancedPlayer(stream);
+        player.setPlayBackListener(new PlaybackListener() {
+        });
+        Thread playerThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    player.play();
+                    player.close();
+                } catch (JavaLayerException e) {
+                }
+            }
+        });
+        playerThread.start();
+    }
+
+    public void stop() {
+        player.stop();
+    }
+
+    public void pause(){
+        
+    }
 }
 /* 
 Notes:
