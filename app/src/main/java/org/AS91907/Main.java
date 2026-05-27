@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 26\05\2026
+Date: 27\05\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -27,7 +27,7 @@ public class Main {
     public static File playlists = new File("playlists/");
 
     enum Operation {
-        DEBUG_CLEAR, CREATE_PLAYLIST
+        DEBUG_CLEAR_FOLDERS, DEBUG_MESSAGE, QUIT, CREATE_PLAYLIST
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException,
@@ -42,19 +42,18 @@ public class Main {
             KeyMap<Operation> keyMap = new KeyMap<>(); // Set up the KeyMap
 
             // KeyMap bindings
-            keyMap.bind(Operation.DEBUG_CLEAR, "C");
+            keyMap.bind(Operation.DEBUG_CLEAR_FOLDERS, "C");
+            keyMap.bind(Operation.DEBUG_MESSAGE, " ");
             keyMap.bind(Operation.CREATE_PLAYLIST, "c");
 
-            // M3u test = new M3u("test");
-            // test.createPlaylist();
-            // test.addAll("test");
+            try (M3u test = new M3u("test")) {
+                test.createPlaylist();
+                test.addAll("test");
+            }
 
-            // Song a = new Song("test/a.mp3");
-            // terminal.writer().println();
-            // terminal.writer().flush();
-            // a.play();
-            // Thread.sleep(1000);
-            // a.stop();
+            try (Song a = new Song("test/a-5sec.mp3")) {
+                a.play();
+            }
 
             // Main input loop
             boolean isReading = true;
@@ -71,7 +70,7 @@ public class Main {
                 Operation op = bindingReader.readBinding(keyMap, null, false); // Read the keybindings
                 if (op != null) {
                     switch (op) {
-                    case DEBUG_CLEAR -> {
+                    case DEBUG_CLEAR_FOLDERS -> {
                         deleteDir(library);
                         deleteDir(playlists);
                     }
@@ -84,10 +83,13 @@ public class Main {
         }
     }
 
-    // To clear an annoying warning that appears when you run the .jar without native access enabled, added in recent versions for presumably security reasons
+    // To clear an annoying warning that appears when you run the .jar without
+    // native access enabled, added in recent versions for presumably security
+    // reasons
     // See note #1 for details
     public static void checkNativeAccess(String[] args) throws URISyntaxException, InterruptedException, IOException {
-        // Check if native access is enabled by checking the java -jar arguments via the runtime environment
+        // Check if native access is enabled by checking the java -jar arguments via the
+        // runtime environment
         boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream() // See note #1.1
                 .anyMatch(arg -> arg.contains("--enable-native-access"));
 
@@ -96,7 +98,8 @@ public class Main {
         }
         System.out.println("Native Access is not enabled. Restarting with native access enabled...");
         // Get the path to the JAR
-        File jarFile = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()); // See note #1.2
+        File jarFile = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()); // See note
+                                                                                                         // #1.2
         String jarPath = jarFile.getAbsolutePath(); // Convert to string
 
         // Create the command for restarting the application with native access enabled
@@ -108,9 +111,10 @@ public class Main {
 
         // Start the new process and exit the current one
         ProcessBuilder pb = new ProcessBuilder(command).inheritIO(); // Create the process
-        Process process = pb.start(); //Start it
+        Process process = pb.start(); // Start it
         System.out.println("Restarting...");
-        System.exit(process.waitFor()); // Terminate current process and make the new process wait until the old one is terminated
+        System.exit(process.waitFor()); // Terminate current process and make the new process wait until the old one is
+                                        // terminated
 
     }
 
@@ -118,7 +122,8 @@ public class Main {
     public static void deleteDir(File file) {
         if (file.isDirectory()) { // Check if the file passed is a directory
             for (File c : file.listFiles()) { // Recursively delete its contents
-                if (c.isDirectory()) { // Check to see if any of the contents are a directory, if so call deleteDir() recursively
+                if (c.isDirectory()) { // Check to see if any of the contents are a directory, if so call deleteDir()
+                                       // recursively
                     deleteDir(c);
                 } else {
                     c.delete();
@@ -128,22 +133,40 @@ public class Main {
         }
     }
 }
-/* 
-Notes:
-    Note #1:
-            #1.1ManagementFactory
-                ManagementFactory.getRuntimeMXBean() looks inside the JVM to see details about how the program was run. 
-                The .getInputArguments() function retrives the arguments that the program was run with.
-                The .stream() function orders and outputs ("streams") the arguments in a way that java can look at them efficiently.
-                The .anyMatch() function searches the streamed data for any conditions passed in the functions arguments
-                The 'arg -> arg.contains("--enable-native-access")' argument passed in the .anyMatch() function is a condition that checks the the input arguments of the program and checks wether or not it contains the --enable-native-access flag.
-                Sources: https://stackoverflow.com/questions/1518213/read-java-jvm-startup-parameters-eg-xmx/1518250#1518250
-
-            #1.2    
-                Main.class.getProtectionDomain() gets the ProtectionDomain of the main class, a ProtectionDomain contains information about where the class is and its permissions.
-                This is used as it gets the full path to the jar (or any runtime environment) that its running from.
-                The .getCodeSource() function then returns the source of the ProtectionDomain and .getLocation() gets just the location of it.
-                The .toURI() function properly formats it for use as a file path by handling spaces, special characters and things like that.
-                Sources: https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file
-        I have used pretty much the exact same function for modifying the runtime enviroment in previous projects, but as many original sources as I can find have been provided. 
-*/
+/*
+ * Notes:
+ * Note #1:
+ * #1.1ManagementFactory
+ * ManagementFactory.getRuntimeMXBean() looks inside the JVM to see details
+ * about how the program was run.
+ * The .getInputArguments() function retrives the arguments that the program was
+ * run with.
+ * The .stream() function orders and outputs ("streams") the arguments in a way
+ * that java can look at them efficiently.
+ * The .anyMatch() function searches the streamed data for any conditions passed
+ * in the functions arguments
+ * The 'arg -> arg.contains("--enable-native-access")' argument passed in the
+ * .anyMatch() function is a condition that checks the the input arguments of
+ * the program and checks wether or not it contains the --enable-native-access
+ * flag.
+ * Sources:
+ * https://stackoverflow.com/questions/1518213/read-java-jvm-startup-parameters-
+ * eg-xmx/1518250#1518250
+ * 
+ * #1.2
+ * Main.class.getProtectionDomain() gets the ProtectionDomain of the main class,
+ * a ProtectionDomain contains information about where the class is and its
+ * permissions.
+ * This is used as it gets the full path to the jar (or any runtime environment)
+ * that its running from.
+ * The .getCodeSource() function then returns the source of the ProtectionDomain
+ * and .getLocation() gets just the location of it.
+ * The .toURI() function properly formats it for use as a file path by handling
+ * spaces, special characters and things like that.
+ * Sources:
+ * https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-
+ * jar-file
+ * I have used pretty much the exact same function for modifying the runtime
+ * enviroment in previous projects, but as many original sources as I can find
+ * have been provided.
+ */

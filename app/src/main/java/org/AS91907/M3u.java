@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Class for creating and managing .m3u playlist files
-Date: 26\05\2026
+Date: 27\05\2026
 */
 package org.AS91907;
 
@@ -119,3 +119,4 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
         }
     }
 }
+ 

@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Song class for setting up songs
-Date: 26\05\2026
+Date: 27\05\2026
 Notes are located at the bottom of the file
 */
 
@@ -17,12 +17,18 @@ import java.nio.file.Paths;
 
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
+import javazoom.jl.player.advanced.PlaybackEvent;
 import javazoom.jl.player.advanced.PlaybackListener;
 
-public final class Song {
+public final class Song implements Runnable, AutoCloseable {
     private final File song;
     private final String title;
-    private AdvancedPlayer player;
+    private AdvancedPlayer player; // For the music player I literally just read the docs, more in note #2
+    private volatile boolean playing = false; // A volatile boolean is just a boolean with memory visibilty so it can be accessed by other threads
+    private volatile boolean paused = false;
+    private Thread playerThread;
+    private int lastPosition = 0;
+    private final Object lock = new Object();
 
     // Contructors for setting up the song and the title
     public Song(String song) throws IOException, InvalidAudioFormatException {
@@ -65,32 +71,84 @@ public final class Song {
         return getFile().getPath();
     }
 
-    public void play() throws FileNotFoundException, JavaLayerException, InterruptedException {
-        FileInputStream stream = new FileInputStream(song);
-        player = new AdvancedPlayer(stream);
-        player.setPlayBackListener(new PlaybackListener() {
-        });
-        Thread playerThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    player.play();
-                    player.close();
-                } catch (JavaLayerException e) {
+    @Override
+    public void run() { // Source: https://stackoverflow.com/questions/16758346/how-pause-and-then-resume-a-thread
+        while (playing) {
+            try {
+                synchronized (lock) {
+                    while (paused && playing) {
+                        lock.wait();
+                    }
                 }
+                FileInputStream stream = new FileInputStream(song);
+                player = new AdvancedPlayer(stream);
+
+                player.setPlayBackListener(new PlaybackListener() {
+                    @Override
+                    public void playbackFinished(PlaybackEvent event) {
+                        lastPosition += event.getFrame();
+                    }
+                });
+                player.play(lastPosition, Integer.MAX_VALUE);
+
+                if (!paused) {
+                    playing = false;
+                    lastPosition = 0;
+
+                }
+            } catch (JavaLayerException | FileNotFoundException | InterruptedException e) {
+                playing = false;
+                e.printStackTrace();
             }
-        });
-        playerThread.start();
+
+        }
     }
 
     public void stop() {
-        player.stop();
+        synchronized (lock) {
+            playing = false;
+            paused = false;
+            lastPosition = 0;
+            if (player != null) {
+                player.close();
+            }
+            lock.notifyAll();
+        }
     }
 
-    public void pause(){
-        
+    public void play() {
+        synchronized (lock) {
+            if (!playing) {
+                playing = true;
+                paused = false;
+                playerThread = new Thread(this);
+                playerThread.start();
+            } else if (paused) {
+                paused = false;
+                lock.notifyAll();
+            }
+        }
+    }
+
+    public void pause() {
+        synchronized (lock) {
+            if (playing && !paused) {
+                paused = true;
+                if (player != null) {
+                    player.close();
+                }
+            }
+        }
+    }
+
+    @Override // @Override allows me to call the close() function from the interface AutoCloseable, and then implement my own behavior on top of that 
+    public void close() throws IOException { // Auto close the player after its finsihed so it doesn't cause a memory leak
+        if (player != null) {
+            stop();
+        }
     }
 }
+
 /* 
 Notes:
     Note #1
