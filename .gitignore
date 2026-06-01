@@ -17,6 +17,7 @@ settings.gradle
 app/build.gradle
 app/src/test
 app/src/main/resources
+app/local-lib
 app/build/classes
 app/build/generated
 app/build/resources
@@ -25,3 +26,4 @@ eclipse-formatter.xml
 library/
 test
 playlists
+app/FITS_HOME

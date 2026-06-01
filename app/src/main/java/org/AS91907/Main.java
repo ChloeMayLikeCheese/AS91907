@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 27\05\2026
+Date: 02\06\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -20,6 +20,9 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp.Capability;
 
+import com.mpatric.mp3agic.InvalidDataException;
+import com.mpatric.mp3agic.UnsupportedTagException;
+
 import javazoom.jl.decoder.JavaLayerException;
 
 public class Main {
@@ -31,7 +34,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException,
-            InvalidAudioFormatException, JavaLayerException {
+            InvalidAudioFormatException, JavaLayerException, UnsupportedTagException, InvalidDataException {
         checkNativeAccess(args);
         try (Terminal terminal = TerminalBuilder.builder() // Create the terminal
                 .name("mp3 player") // Name the terminal
@@ -51,8 +54,17 @@ public class Main {
                 test.addAll("test");
             }
 
+            // try (Song a = new Song("test/Slavian - Slavian - Phantoms Over Japan | ファントムオーバー日本.mp3")) {
+            //     terminal.writer().println(a.getData());
+            //     terminal.writer().flush();
+            //     System.exit(0);
+            //     a.play();
+            // }
+
             try (Song a = new Song("test/a-5sec.mp3")) {
-                a.play();
+                terminal.writer().println(a.getData());
+                terminal.writer().flush();
+                System.exit(0);
             }
 
             // Main input loop
@@ -83,13 +95,9 @@ public class Main {
         }
     }
 
-    // To clear an annoying warning that appears when you run the .jar without
-    // native access enabled, added in recent versions for presumably security
-    // reasons
-    // See note #1 for details
+    // To clear an annoying warning that appears when you run the .jar without native access enabled, added in recent versions for presumably security reasons See note #1 for details
     public static void checkNativeAccess(String[] args) throws URISyntaxException, InterruptedException, IOException {
-        // Check if native access is enabled by checking the java -jar arguments via the
-        // runtime environment
+        // Check if native access is enabled by checking the java -jar arguments via the runtime environment
         boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream() // See note #1.1
                 .anyMatch(arg -> arg.contains("--enable-native-access"));
 

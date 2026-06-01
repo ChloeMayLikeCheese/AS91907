@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Class for creating and managing .m3u playlist files
-Date: 27\05\2026
+Date: 02\06\2026
 */
 package org.AS91907;
 
@@ -16,6 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+
+import com.mpatric.mp3agic.InvalidDataException;
+import com.mpatric.mp3agic.UnsupportedTagException;
 
 public class M3u implements AutoCloseable { // So I can use a try block with resources, and it will automatically close. Source: https://dev.to/ca5th/memory-leaks-in-java-and-how-to-avoid-them-48h3
     private String name;
@@ -52,6 +55,8 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
         m3u = new File(parentDir, name + ".m3u");
         m3uWriter = new BufferedWriter(new FileWriter(m3u));
         m3uWriter.write("#EXTM3U");
+        m3uWriter.newLine();
+        m3uWriter.write("#PLAYLIST:" + name);
         m3uWriter.flush();
     }
 
@@ -74,23 +79,34 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
 
     }
 
-    public void add(File song) throws IOException, InvalidAudioFormatException {
+    public void add(File song)
+            throws IOException, InvalidAudioFormatException, UnsupportedTagException, InvalidDataException {
         add(new Song(song));
     }
 
-    public void add(String song) throws IOException, InvalidAudioFormatException {
+    public void add(String song)
+            throws IOException, InvalidAudioFormatException, UnsupportedTagException, InvalidDataException {
         add(new Song(song));
     }
 
     // Functions for adding whole directories to the m3u file
-    public void addAll(String path) throws IOException, InvalidAudioFormatException {
+    public void addAll(String path)
+            throws IOException, InvalidAudioFormatException, UnsupportedTagException, InvalidDataException {
         addAll(new File(path));
     }
 
-    public void addAll(File file) throws IOException, InvalidAudioFormatException {
+    public void addAll(File file)
+            throws IOException, InvalidAudioFormatException, UnsupportedTagException, InvalidDataException {
         if (file.isDirectory()) {
-            for (File c : file.listFiles()) {
-                add(new Song(c));
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File c : files) {
+                    try {
+                        add(new Song(c));
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("DEBUG: Skipped unreadable file inside directory: " + c.getName());
+                    }
+                }
             }
         }
     }
@@ -119,4 +135,3 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
         }
     }
 }
- 

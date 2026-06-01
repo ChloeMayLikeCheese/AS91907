@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Class for a custom exception, for when the audio format is invalid. It's pretty redundent for this project but I wanted to learn how.
-Date: 27\05\2026
+Date: 02\06\2026
 */
 package org.AS91907;
 
