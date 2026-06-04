@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Song class for setting up songs
-Date: 02\06\2026
+Date: 05\06\2026
 Notes are located at the bottom of the file
 */
 
@@ -50,7 +50,7 @@ public final class Song implements Runnable, AutoCloseable {
 
     public Song(File song)
             throws InvalidAudioFormatException, IOException, UnsupportedTagException, InvalidDataException {
-        System.out.println("DEBUG: Trying to parse file -> " + song.getName());
+        System.err.println("DEBUG: Trying to parse file: " + song.getName());
         validateType(song.getPath());
         this.song = song;
         mp3File = new Mp3File(this.song);
@@ -58,23 +58,26 @@ public final class Song implements Runnable, AutoCloseable {
 
         if (mp3File.hasId3v2Tag()) {
             ID3v2 id3v2Tag = mp3File.getId3v2Tag();
-            this.title = id3v2Tag.getTitle();
-            this.track = id3v2Tag.getTrack();
-            this.album = id3v2Tag.getAlbum();
-            this.artist = id3v2Tag.getArtist();
-            this.year = id3v2Tag.getYear();
-            this.genre = id3v2Tag.getGenre() + " (" + id3v2Tag.getGenreDescription() + ")";
+            this.title = fallbackIfNull(id3v2Tag.getTitle(), "UnknownTitle").replaceAll("/", "⧸");
+            this.track = fallbackIfNull(id3v2Tag.getTrack(), "0");
+            this.album = fallbackIfNull(id3v2Tag.getAlbum(), "UnknownAlbum").replaceAll("/", "⧸");
+            this.artist = fallbackIfNull(id3v2Tag.getArtist(), "UnknownArtist").replaceAll("/", "⧸");
+            this.year = fallbackIfNull(id3v2Tag.getYear(), "UnknownYear");
+            this.genre = fallbackIfNull(id3v2Tag.getGenreDescription(), "UnknownGenre").replaceAll("/", "⧸");
+
         } else if (mp3File.hasId3v1Tag()) {
             ID3v1 id3v1Tag = mp3File.getId3v1Tag();
-            this.title = id3v1Tag.getTitle();
-            this.track = id3v1Tag.getTrack();
-            this.album = id3v1Tag.getAlbum();
-            this.artist = id3v1Tag.getArtist();
-            this.year = id3v1Tag.getYear();
-            this.genre = id3v1Tag.getGenre() + " (" + id3v1Tag.getGenreDescription() + ")";
-        } else {
-            this.title = song.getName().replaceFirst("[.][^.]+$", "");
+            this.title = fallbackIfNull(id3v1Tag.getTitle(), "UnknownTitle").replaceAll("/", "⧸");
+            this.track = fallbackIfNull(id3v1Tag.getTrack(), "0");
+            this.album = fallbackIfNull(id3v1Tag.getAlbum(), "UnknownAlbum").replaceAll("/", "⧸");
+            this.artist = fallbackIfNull(id3v1Tag.getArtist(), "UnknownArtist").replaceAll("/", "⧸");
+            this.year = fallbackIfNull(id3v1Tag.getYear(), "UnknownYear");
+            this.genre = fallbackIfNull(id3v1Tag.getGenreDescription(), "UnknownGenre").replaceAll("/", "⧸");
         }
+    }
+
+    private String fallbackIfNull(String value, String defaultValue) {
+        return (value == null) ? defaultValue : value;
     }
 
     // Function for validating the type of the file
@@ -183,24 +186,23 @@ public final class Song implements Runnable, AutoCloseable {
 
     public String getData() throws IOException, UnsupportedTagException, InvalidDataException {
         String tagData;
-        //mp3File = new Mp3File(this.song);
         StringBuilder tagDataBuilder = new StringBuilder();
         if (mp3File.hasId3v2Tag()) {
-            // ID3v2 id3v2Tag = mp3File.getId3v2Tag();
-            tagDataBuilder.append(getTitle()).append("\n");
-            tagDataBuilder.append(getTrack()).append("\n");
-            tagDataBuilder.append(getAlbum()).append("\n");
-            tagDataBuilder.append(getArtist()).append("\n");
-            tagDataBuilder.append(getYear()).append("\n");
-            tagDataBuilder.append(getGenre()).append("\n");
+            tagDataBuilder.append("Title:").append(getTitle()).append("\n");
+            tagDataBuilder.append("TrackNumber:").append(getTrack()).append("\n");
+            tagDataBuilder.append("Album:").append(getAlbum()).append("\n");
+            tagDataBuilder.append("Artist:").append(getArtist()).append("\n");
+            tagDataBuilder.append("Year:").append(getYear()).append("\n");
+            tagDataBuilder.append("Genre:").append(getGenre()).append("\n");
         }
-        tagDataBuilder.append(mp3File.getLengthInSeconds()).append("\n");
+        tagDataBuilder.append("Length:").append(getLength()).append("\n");
+        tagDataBuilder.append("LengthFormatted:").append(getLengthFormatted()).append("\n");
         tagData = tagDataBuilder.toString();
         return tagData;
     }
 
     public String getTrack() {
-        return track;
+        return String.format("%02d", Long.valueOf(track));
     }
 
     public String getArtist() {
@@ -219,9 +221,44 @@ public final class Song implements Runnable, AutoCloseable {
         return length;
     }
 
+    public String getLengthFormatted() {
+        long minutes = length / 60;
+        long seconds = length % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+
     public String getAlbum() {
         return album;
     }
+
+    public void setTitle(String title) {
+        this.title = title.replaceAll("/", "⧸");
+    }
+
+    public void setTrack(String track) {
+        this.track = String.format("%02d", Long.valueOf(track));
+    }
+
+    public void setAlbum(String album) {
+        this.album = album.replaceAll("/", "⧸");
+    }
+
+    public void setArtist(String artist) {
+        this.artist = artist.replaceAll("/", "⧸");
+    }
+
+    public void setYear(String year) {
+        this.year = year;
+    }
+
+    public void setGenre(String genre) {
+        this.genre = genre.replaceAll("/", "⧸");
+    }
+
+    public void setLength(long length) {
+        this.length = length;
+    }
+
 }
 
 /* 

@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 02\06\2026
+Date: 05\06\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -54,18 +54,21 @@ public class Main {
                 test.addAll("test");
             }
 
-            // try (Song a = new Song("test/Slavian - Slavian - Phantoms Over Japan | ファントムオーバー日本.mp3")) {
-            //     terminal.writer().println(a.getData());
-            //     terminal.writer().flush();
-            //     System.exit(0);
-            //     a.play();
-            // }
-
-            try (Song a = new Song("test/a-5sec.mp3")) {
+            try (Song a = new Song("test/Slavian - Slavian - Phantoms Over Japan | ファントムオーバー日本.mp3")) {
                 terminal.writer().println(a.getData());
                 terminal.writer().flush();
-                System.exit(0);
             }
+
+            //try (Song a = new Song("test/a-5sec.mp3")) {
+                //Song a = new Song("test/a-5sec.mp3");
+                //a.play();
+               // Thread.sleep(1000);
+                // terminal.writer().println(a.getCurrentPosition());
+             //   a.pause();
+
+                //terminal.writer().println(a.getData());
+                //terminal.writer().flush();
+           // }
 
             // Main input loop
             boolean isReading = true;
