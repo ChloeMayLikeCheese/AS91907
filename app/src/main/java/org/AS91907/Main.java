@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 05\06\2026
+Date: 08\06\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -36,6 +36,7 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException,
             InvalidAudioFormatException, JavaLayerException, UnsupportedTagException, InvalidDataException {
         checkNativeAccess(args);
+        init();
         try (Terminal terminal = TerminalBuilder.builder() // Create the terminal
                 .name("mp3 player") // Name the terminal
                 .jansi(true) // Enable jansi for compatibility with ANSI for windows
@@ -60,15 +61,15 @@ public class Main {
             }
 
             //try (Song a = new Song("test/a-5sec.mp3")) {
-                //Song a = new Song("test/a-5sec.mp3");
-                //a.play();
-               // Thread.sleep(1000);
-                // terminal.writer().println(a.getCurrentPosition());
-             //   a.pause();
+            //Song a = new Song("test/a-5sec.mp3");
+            //a.play();
+            // Thread.sleep(1000);
+            // terminal.writer().println(a.getCurrentPosition());
+            //   a.pause();
 
-                //terminal.writer().println(a.getData());
-                //terminal.writer().flush();
-           // }
+            //terminal.writer().println(a.getData());
+            //terminal.writer().flush();
+            // }
 
             // Main input loop
             boolean isReading = true;
@@ -143,6 +144,20 @@ public class Main {
             file.delete(); // Delete the directory
         }
     }
+
+    public static void init() {
+        System.err.println("DEBUG: INIT: Starting Init...");
+        if (!library.mkdir()) {
+            deleteDir(library);
+            System.err.println("DEBUG: INIT: Refreshing library...");
+        }
+        if (!playlists.mkdir()) {
+            deleteDir(playlists);
+            System.err.println("DEBUG: INIT: Refreshing playlists...");
+        }
+        System.err.println("DEBUG: INIT: Init finished");
+    }
+    
 }
 /*
  * Notes:

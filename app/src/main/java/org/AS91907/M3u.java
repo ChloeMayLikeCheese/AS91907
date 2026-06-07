@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Class for creating and managing .m3u playlist files
-Date: 05\06\2026
+Date: 08\06\2026
 */
 package org.AS91907;
 
@@ -29,8 +29,6 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
     private File m3uDir;
     private BufferedWriter m3uWriter; // BufferedWriter is just a more efficient way of writing to files, via an output stream
     private BufferedWriter sourceM3uWriter;
-    private int i = 0;
-    private int j = 0;
     // Constructor
 
     public M3u(String name) {
@@ -39,10 +37,10 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
 
     // Function for creating the file
     public void create(String parentDirPath) throws IOException {
-        this.parentDir = new File(parentDirPath);
+        parentDir = new File(parentDirPath);
         m3uDir = new File(parentDirPath + "/m3us");
-        if (!this.parentDir.exists()) {
-            this.parentDir.mkdirs();
+        if (!parentDir.exists()) {
+            parentDir.mkdirs();
         }
         if (!m3uDir.exists()) {
             m3uDir.mkdirs();
@@ -86,11 +84,21 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
     // Functions for adding a single song to the m3u file
     public void add(Song song)
             throws IOException, UnsupportedTagException, InvalidDataException, InvalidAudioFormatException {
-        
+
         File sourceFile = new File(song.getPath());
-        for (File c : parentDir.listFiles()) {
-            
+
+        File[] existingFiles = parentDir.listFiles();
+        int j = 0;
+        if (existingFiles != null) {
+            for (File c : existingFiles) {
+                if (!c.isDirectory() && !c.getName().startsWith(".")) {
+                    j++;
+                }
+            }
         }
+        String formattedTrack = String.format("%02d", j + 1);
+        song.setTrack(formattedTrack);
+
         try {
             String songFileName = String.format("%s_%s_%s_%s.mp3", song.getArtist(), song.getAlbum(), song.getTrack(),
                     song.getTitle());
@@ -102,6 +110,7 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
                             String str = songFileName;
                             System.err.println(
                                     "DEBUG: Renaming file with same name but differnt data: " + dest.getName());
+                            int i = 0;
                             for (File c : parentDir.listFiles()) {
                                 if (!c.isDirectory()) {
                                     if (c.getName().equals(songFileName)) {

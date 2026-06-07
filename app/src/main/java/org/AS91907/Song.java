@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Song class for setting up songs
-Date: 05\06\2026
+Date: 08\06\2026
 Notes are located at the bottom of the file
 */
 
@@ -50,7 +50,7 @@ public final class Song implements Runnable, AutoCloseable {
 
     public Song(File song)
             throws InvalidAudioFormatException, IOException, UnsupportedTagException, InvalidDataException {
-        System.err.println("DEBUG: Trying to parse file: " + song.getName());
+        System.err.println("DEBUG: PARSE: FILE: Trying to parse file: " + song.getName());
         validateType(song.getPath());
         this.song = song;
         mp3File = new Mp3File(this.song);
@@ -74,6 +74,8 @@ public final class Song implements Runnable, AutoCloseable {
             this.year = fallbackIfNull(id3v1Tag.getYear(), "UnknownYear");
             this.genre = fallbackIfNull(id3v1Tag.getGenreDescription(), "UnknownGenre").replaceAll("/", "⧸");
         }
+        System.err.println("DEBUG: PARSE: FILE: Parsing finished " + song.getName());
+        
     }
 
     private String fallbackIfNull(String value, String defaultValue) {
@@ -237,6 +239,12 @@ public final class Song implements Runnable, AutoCloseable {
 
     public void setTrack(String track) {
         this.track = String.format("%02d", Long.valueOf(track));
+        // if (mp3File.hasId3v2Tag()) {
+        //     mp3File.getId3v2Tag().setTrack(this.track);
+        // }
+        // if (mp3File.hasId3v1Tag()) {
+        //     mp3File.getId3v1Tag().setTrack(this.track);
+        // }
     }
 
     public void setAlbum(String album) {
