@@ -42,6 +42,7 @@ public final class Song implements Runnable, AutoCloseable {
     private int lastPosition = 0;
     private final Object lock = new Object();
     private Mp3File mp3File;
+    private FileInputStream stream;
 
     public Song(String songPath)
             throws IOException, InvalidAudioFormatException, UnsupportedTagException, InvalidDataException {
@@ -59,7 +60,7 @@ public final class Song implements Runnable, AutoCloseable {
         if (mp3File.hasId3v2Tag()) {
             ID3v2 id3v2Tag = mp3File.getId3v2Tag();
             this.title = fallbackIfNull(id3v2Tag.getTitle(), "UnknownTitle").replaceAll("/", "⧸");
-            this.track = fallbackIfNull(id3v2Tag.getTrack(), "0");
+            this.track = fallbackIfNull(id3v2Tag.getTrack(), "UnknownTrack");
             this.album = fallbackIfNull(id3v2Tag.getAlbum(), "UnknownAlbum").replaceAll("/", "⧸");
             this.artist = fallbackIfNull(id3v2Tag.getArtist(), "UnknownArtist").replaceAll("/", "⧸");
             this.year = fallbackIfNull(id3v2Tag.getYear(), "UnknownYear");
@@ -68,7 +69,7 @@ public final class Song implements Runnable, AutoCloseable {
         } else if (mp3File.hasId3v1Tag()) {
             ID3v1 id3v1Tag = mp3File.getId3v1Tag();
             this.title = fallbackIfNull(id3v1Tag.getTitle(), "UnknownTitle").replaceAll("/", "⧸");
-            this.track = fallbackIfNull(id3v1Tag.getTrack(), "0");
+            this.track = fallbackIfNull(id3v1Tag.getTrack(), "UnknownTrack");
             this.album = fallbackIfNull(id3v1Tag.getAlbum(), "UnknownAlbum").replaceAll("/", "⧸");
             this.artist = fallbackIfNull(id3v1Tag.getArtist(), "UnknownArtist").replaceAll("/", "⧸");
             this.year = fallbackIfNull(id3v1Tag.getYear(), "UnknownYear");
@@ -101,9 +102,8 @@ public final class Song implements Runnable, AutoCloseable {
                         lock.wait();
                     }
                 }
-                FileInputStream stream = new FileInputStream(song);
+                stream = new FileInputStream(song);
                 player = new AdvancedPlayer(stream);
-
                 player.setPlayBackListener(new PlaybackListener() {
                     @Override
                     public void playbackFinished(PlaybackEvent event) {
@@ -111,7 +111,7 @@ public final class Song implements Runnable, AutoCloseable {
                     }
                 });
                 player.play(lastPosition, Integer.MAX_VALUE);
-
+                
                 if (!paused) {
                     playing = false;
                     lastPosition = 0;
@@ -134,6 +134,7 @@ public final class Song implements Runnable, AutoCloseable {
                 player.close();
             }
             lock.notifyAll();
+            System.err.println("DEBUG: PLAYER: Stopped");
         }
     }
 
@@ -148,6 +149,7 @@ public final class Song implements Runnable, AutoCloseable {
                 paused = false;
                 lock.notifyAll();
             }
+            System.err.println("DEBUG: PLAYER: Started");
         }
     }
 
@@ -159,6 +161,7 @@ public final class Song implements Runnable, AutoCloseable {
                     player.close();
                 }
             }
+            System.err.println("DEBUG: PLAYER: Paused");
         }
     }
 
@@ -166,6 +169,10 @@ public final class Song implements Runnable, AutoCloseable {
     public void close() throws IOException { // Auto close the player after its finsihed so it doesn't cause a memory leak
         if (player != null) {
             stop();
+            
+        }
+        if (stream != null) {
+            stream.close();
         }
     }
 
@@ -204,7 +211,7 @@ public final class Song implements Runnable, AutoCloseable {
     }
 
     public String getTrack() {
-        return String.format("%02d", Long.valueOf(track));
+        return track;
     }
 
     public String getArtist() {
@@ -239,12 +246,6 @@ public final class Song implements Runnable, AutoCloseable {
 
     public void setTrack(String track) {
         this.track = String.format("%02d", Long.valueOf(track));
-        // if (mp3File.hasId3v2Tag()) {
-        //     mp3File.getId3v2Tag().setTrack(this.track);
-        // }
-        // if (mp3File.hasId3v1Tag()) {
-        //     mp3File.getId3v1Tag().setTrack(this.track);
-        // }
     }
 
     public void setAlbum(String album) {

@@ -86,18 +86,30 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
             throws IOException, UnsupportedTagException, InvalidDataException, InvalidAudioFormatException {
 
         File sourceFile = new File(song.getPath());
-
         File[] existingFiles = parentDir.listFiles();
-        int j = 0;
-        if (existingFiles != null) {
-            for (File c : existingFiles) {
-                if (!c.isDirectory() && !c.getName().startsWith(".")) {
-                    j++;
-                }
-            }
+
+        if (song.getAlbum().equals("UnknownAlbum") && !song.getTrack().equals("UnknownTrack")) {
+            song.setTrack("UnknownTrack");
+            System.err.println("DEBUG: Known track number, but no album. Replaced track number");
         }
-        String formattedTrack = String.format("%02d", j + 1);
-        song.setTrack(formattedTrack);
+
+        if (song.getTrack().equals("UnknownTrack")) {
+            int i = 0;
+            if (existingFiles != null) {
+                for (File c : existingFiles) {
+                    if (!c.isDirectory()) {
+                        try (Song cSong = new Song(c)) {
+                            if (cSong.getAlbum().equals(song.getAlbum())) {
+                                i++;
+                            }
+                        }
+                    }
+                }
+
+            }
+            String formattedTrack = String.format("%02d", i + 1);
+            song.setTrack(formattedTrack);
+        }
 
         try {
             String songFileName = String.format("%s_%s_%s_%s.mp3", song.getArtist(), song.getAlbum(), song.getTrack(),
@@ -144,7 +156,7 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
         String songData = songDataBuilder.toString();
         m3uWriter.newLine();
         m3uWriter.newLine();
-        m3uWriter.write(songData); // Write the song file to the m3u, I'll do formatting later 
+        m3uWriter.write(songData);
         m3uWriter.write(song.getPath());
         m3uWriter.flush();
 
@@ -177,8 +189,8 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
             File[] files = file.listFiles();
             if (files != null) {
                 for (File c : files) {
-                    try {
-                        add(new Song(c));
+                    try (Song tmp = new Song(c)) {
+                        add(tmp);
                     } catch (IllegalArgumentException e) {
                         System.err.println("DEBUG: Skipped unreadable file inside directory: " + c.getName());
                     }
@@ -204,13 +216,37 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
         return data.toString(); // Return the data back as a string
     }
 
+    private void writeSongEntry(Song song, String sourcePath)
+            throws IOException, UnsupportedTagException, InvalidDataException {
+        StringBuilder songDataBuilder = new StringBuilder();
+        songDataBuilder.append("#EXTINF:");
+        songDataBuilder.append(song.getLength()).append(",");
+        songDataBuilder.append(song.getArtist()).append(" - ");
+        songDataBuilder.append(song.getTitle()).append("\n");
+        String songData = songDataBuilder.toString();
+
+        m3uWriter.newLine();
+        m3uWriter.newLine();
+        m3uWriter.write(songData);
+        m3uWriter.write(song.getPath());
+        m3uWriter.flush();
+
+        sourceM3uWriter.newLine();
+        sourceM3uWriter.newLine();
+        sourceM3uWriter.write(songData);
+        sourceM3uWriter.write(sourcePath);
+        sourceM3uWriter.flush();
+    }
+
     @Override // @Override allows me to call the close() function from the interface AutoCloseable, and then implement my own behavior on top of that 
     public void close() throws IOException { // Auto close the writer after its finsihed so it doesn't cause a memory leak
         if (m3uWriter != null) {
             m3uWriter.close();
+            System.err.println("DEBUG: M3UWRITER: Closed");
         }
         if (sourceM3uWriter != null) {
             sourceM3uWriter.close();
+            System.err.println("DEBUG: SOURCEWRITER: Closed");
         }
     }
 }

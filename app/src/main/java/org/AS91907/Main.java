@@ -60,15 +60,15 @@ public class Main {
                 terminal.writer().flush();
             }
 
-            //try (Song a = new Song("test/a-5sec.mp3")) {
-            //Song a = new Song("test/a-5sec.mp3");
-            //a.play();
+            // try (Song a = new Song("test/a-5sec.mp3")) {
+            // Song a = new Song("test/a-5sec.mp3");
+            // a.play();
             // Thread.sleep(1000);
             // terminal.writer().println(a.getCurrentPosition());
-            //   a.pause();
+            // a.pause();
 
-            //terminal.writer().println(a.getData());
-            //terminal.writer().flush();
+            // terminal.writer().println(a.getData());
+            // terminal.writer().flush();
             // }
 
             // Main input loop
@@ -83,15 +83,15 @@ public class Main {
                 terminal.puts(Capability.clear_screen); // Clear the screen
                 terminal.writer().flush();
 
-                Operation op = bindingReader.readBinding(keyMap, null, false); // Read the keybindings
+                Operation op = bindingReader.readBinding(keyMap, null, true); // Read the keybindings
                 if (op != null) {
                     switch (op) {
-                    case DEBUG_CLEAR_FOLDERS -> {
-                        deleteDir(library);
-                        deleteDir(playlists);
-                    }
-                    case CREATE_PLAYLIST -> {
-                    }
+                        case DEBUG_CLEAR_FOLDERS -> {
+                            deleteDir(library);
+                            deleteDir(playlists);
+                        }
+                        case CREATE_PLAYLIST -> {
+                        }
                     }
                 }
             }
@@ -99,9 +99,12 @@ public class Main {
         }
     }
 
-    // To clear an annoying warning that appears when you run the .jar without native access enabled, added in recent versions for presumably security reasons See note #1 for details
+    // To clear an annoying warning that appears when you run the .jar without
+    // native access enabled, added in recent versions for presumably security
+    // reasons See note #1 for details
     public static void checkNativeAccess(String[] args) throws URISyntaxException, InterruptedException, IOException {
-        // Check if native access is enabled by checking the java -jar arguments via the runtime environment
+        // Check if native access is enabled by checking the java -jar arguments via the
+        // runtime environment
         boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream() // See note #1.1
                 .anyMatch(arg -> arg.contains("--enable-native-access"));
 
@@ -157,7 +160,7 @@ public class Main {
         }
         System.err.println("DEBUG: INIT: Init finished");
     }
-    
+
 }
 /*
  * Notes:
