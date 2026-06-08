@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 08\06\2026
+Date: 09\06\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -50,15 +50,15 @@ public class Main {
             keyMap.bind(Operation.DEBUG_MESSAGE, " ");
             keyMap.bind(Operation.CREATE_PLAYLIST, "c");
 
-            try (M3u test = new M3u("test")) {
-                test.createPlaylist();
-                test.addAll("test");
-            }
+            // try (M3u test = new M3u("test")) {
+            //     test.createPlaylist();
+            //     test.addAll("test");
+            // }
 
-            try (Song a = new Song("test/Slavian - Slavian - Phantoms Over Japan | ファントムオーバー日本.mp3")) {
-                terminal.writer().println(a.getData());
-                terminal.writer().flush();
-            }
+            // try (Song a = new Song("test/Slavian - Slavian - Phantoms Over Japan | ファントムオーバー日本.mp3")) {
+            //     terminal.writer().println(a.getData());
+            //     terminal.writer().flush();
+            // }
 
             // try (Song a = new Song("test/a-5sec.mp3")) {
             // Song a = new Song("test/a-5sec.mp3");
@@ -86,12 +86,12 @@ public class Main {
                 Operation op = bindingReader.readBinding(keyMap, null, true); // Read the keybindings
                 if (op != null) {
                     switch (op) {
-                        case DEBUG_CLEAR_FOLDERS -> {
-                            deleteDir(library);
-                            deleteDir(playlists);
-                        }
-                        case CREATE_PLAYLIST -> {
-                        }
+                    case DEBUG_CLEAR_FOLDERS -> {
+                        deleteDir(library);
+                        deleteDir(playlists);
+                    }
+                    case CREATE_PLAYLIST -> {
+                    }
                     }
                 }
             }
@@ -99,13 +99,11 @@ public class Main {
         }
     }
 
-    // To clear an annoying warning that appears when you run the .jar without
-    // native access enabled, added in recent versions for presumably security
-    // reasons See note #1 for details
+    // To clear an annoying warning that appears when you run the .jar without native access enabled, added in recent versions for presumably security reasons, See Note #1 for details
     public static void checkNativeAccess(String[] args) throws URISyntaxException, InterruptedException, IOException {
         // Check if native access is enabled by checking the java -jar arguments via the
         // runtime environment
-        boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream() // See note #1.1
+        boolean nativeAccessEnabled = ManagementFactory.getRuntimeMXBean().getInputArguments().stream() // See Note #1.1
                 .anyMatch(arg -> arg.contains("--enable-native-access"));
 
         if (nativeAccessEnabled) { // Just return if native access is enabled
@@ -113,8 +111,8 @@ public class Main {
         }
         System.out.println("Native Access is not enabled. Restarting with native access enabled...");
         // Get the path to the JAR
-        File jarFile = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()); // See note
-                                                                                                         // #1.2
+        File jarFile = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()); // See Note #1.2
+
         String jarPath = jarFile.getAbsolutePath(); // Convert to string
 
         // Create the command for restarting the application with native access enabled
@@ -137,8 +135,8 @@ public class Main {
     public static void deleteDir(File file) {
         if (file.isDirectory()) { // Check if the file passed is a directory
             for (File c : file.listFiles()) { // Recursively delete its contents
-                if (c.isDirectory()) { // Check to see if any of the contents are a directory, if so call deleteDir()
-                                       // recursively
+                if (c.isDirectory()) { // Check to see if any of the contents are a directory, if so call deleteDir() recursively
+                                       
                     deleteDir(c);
                 } else {
                     c.delete();
@@ -167,7 +165,7 @@ public class Main {
  * Note #1:
  * #1.1ManagementFactory
  * ManagementFactory.getRuntimeMXBean() looks inside the JVM to see details
- * about how the program was run.
+ * about how the program was run. 
  * The .getInputArguments() function retrives the arguments that the program was
  * run with.
  * The .stream() function orders and outputs ("streams") the arguments in a way

@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Class for creating and managing .m3u playlist files
-Date: 08\06\2026
+Date: 09\06\2026
 */
 package org.AS91907;
 
@@ -11,24 +11,27 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import com.mpatric.mp3agic.InvalidDataException;
 import com.mpatric.mp3agic.UnsupportedTagException;
 
 public class M3u implements AutoCloseable { // So I can use a try block with resources, and it will automatically close. Source: https://dev.to/ca5th/memory-leaks-in-java-and-how-to-avoid-them-48h3
     private String name;
-    Boolean playlist;
+    boolean playlist = false;
     private File m3u;
     private File sourceM3u;
     private File parentDir;
     private File m3uDir;
     private BufferedWriter m3uWriter; // BufferedWriter is just a more efficient way of writing to files, via an output stream
     private BufferedWriter sourceM3uWriter;
+    private final List<Song> playlistSongs = new ArrayList<>();
     // Constructor
 
     public M3u(String name) {
@@ -82,90 +85,14 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
     }
 
     // Functions for adding a single song to the m3u file
+
     public void add(Song song)
             throws IOException, UnsupportedTagException, InvalidDataException, InvalidAudioFormatException {
-
-        File sourceFile = new File(song.getPath());
-        File[] existingFiles = parentDir.listFiles();
-
-        if (song.getAlbum().equals("UnknownAlbum") && !song.getTrack().equals("UnknownTrack")) {
-            song.setTrack("UnknownTrack");
-            System.err.println("DEBUG: Known track number, but no album. Replaced track number");
+        if (song != null) {
+            playlistSongs.add(song);
         }
-
-        if (song.getTrack().equals("UnknownTrack")) {
-            int i = 0;
-            if (existingFiles != null) {
-                for (File c : existingFiles) {
-                    if (!c.isDirectory()) {
-                        try (Song cSong = new Song(c)) {
-                            if (cSong.getAlbum().equals(song.getAlbum())) {
-                                i++;
-                            }
-                        }
-                    }
-                }
-
-            }
-            String formattedTrack = String.format("%02d", i + 1);
-            song.setTrack(formattedTrack);
-        }
-
-        try {
-            String songFileName = String.format("%s_%s_%s_%s.mp3", song.getArtist(), song.getAlbum(), song.getTrack(),
-                    song.getTitle());
-            if (playlist) { // Check to see if the m3u file is a playlist, if so copy the added files to the playlist
-                File dest = new File(parentDir.getPath() + "/" + songFileName); // Create the destination file
-                if (dest.exists()) {
-                    try (Song tmp = new Song(dest)) {
-                        if (!tmp.getData().equals(song.getData())) {
-                            String str = songFileName;
-                            System.err.println(
-                                    "DEBUG: Renaming file with same name but differnt data: " + dest.getName());
-                            int i = 0;
-                            for (File c : parentDir.listFiles()) {
-                                if (!c.isDirectory()) {
-                                    if (c.getName().equals(songFileName)) {
-                                        i++;
-                                        song.setTitle(song.getTitle() + String.format("%02d", i));
-                                        songFileName = String.format("%s_%s_%s_%s.mp3", song.getArtist(),
-                                                song.getAlbum(), song.getTrack(), song.getTitle());
-                                        dest = new File(parentDir.getPath() + "/" + songFileName);
-                                    }
-                                }
-                            }
-                        } else {
-                            System.err.println("DEBUG: Deleting already existing file: " + dest.getName());
-                            dest.delete();
-                        }
-                    }
-                }
-                Path destPath = Paths.get(dest.getPath()); // Get the destination and source paths, but for java.nio.file 
-                Path sourcePath = Paths.get(song.getPath());
-                Files.copy(sourcePath, destPath, StandardCopyOption.COPY_ATTRIBUTES); // Copy the files over, Source: https://stackoverflow.com/questions/16433915/how-to-copy-file-from-one-location-to-another-location (I got COPY_ATTRIBUTES from reading the Docs here: https://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html#copy(java.nio.file.Path,%20java.nio.file.Path,%20java.nio.file.CopyOption...))
-                song = new Song(dest);
-            }
-        } catch (FileAlreadyExistsException e) {
-            e.printStackTrace();
-        }
-        StringBuilder songDataBuilder = new StringBuilder();
-        songDataBuilder.append("#EXTINF:");
-        songDataBuilder.append(song.getLength()).append(",");
-        songDataBuilder.append(song.getArtist()).append(" - ");
-        songDataBuilder.append(song.getTitle()).append("\n");
-        String songData = songDataBuilder.toString();
-        m3uWriter.newLine();
-        m3uWriter.newLine();
-        m3uWriter.write(songData);
-        m3uWriter.write(song.getPath());
-        m3uWriter.flush();
-
-        sourceM3uWriter.newLine();
-        sourceM3uWriter.newLine();
-        sourceM3uWriter.write(songData);
-        sourceM3uWriter.write(sourceFile.getPath());
-        sourceM3uWriter.flush();
     }
+
 
     public void add(File song)
             throws IOException, InvalidAudioFormatException, UnsupportedTagException, InvalidDataException {
@@ -189,8 +116,8 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
             File[] files = file.listFiles();
             if (files != null) {
                 for (File c : files) {
-                    try (Song tmp = new Song(c)) {
-                        add(tmp);
+                    try {
+                        add(new Song(c));
                     } catch (IllegalArgumentException e) {
                         System.err.println("DEBUG: Skipped unreadable file inside directory: " + c.getName());
                     }
@@ -239,14 +166,130 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
     }
 
     @Override // @Override allows me to call the close() function from the interface AutoCloseable, and then implement my own behavior on top of that 
-    public void close() throws IOException { // Auto close the writer after its finsihed so it doesn't cause a memory leak
-        if (m3uWriter != null) {
-            m3uWriter.close();
-            System.err.println("DEBUG: M3UWRITER: Closed");
-        }
-        if (sourceM3uWriter != null) {
-            sourceM3uWriter.close();
-            System.err.println("DEBUG: SOURCEWRITER: Closed");
+    public void close() throws IOException, UnsupportedTagException, InvalidDataException, InvalidAudioFormatException { // Auto close the writer after its finsihed so it doesn't cause a memory leak
+        try {
+            if (playlist) {
+                for (Song song : playlistSongs) { // If no artist, clear the track number so I can properly sort it with the rest of the artistless songs 
+                    if (song.getArtist().equalsIgnoreCase("UnknownArtist")) {
+                        song.setTrack("UnknownTrack");
+                    }
+
+                    else if ((song.getAlbum().equalsIgnoreCase("UnknownAlbum")) // If no album but has track, clear the track, TODO: maybe keep the track if it has an album
+                            && !song.getTrack().equalsIgnoreCase("UnknownTrack")) {
+                        song.setTrack("UnknownTrack");
+                    }
+                }
+
+                playlistSongs.sort(new Comparator<Song>() { // Create a new Comparator for sorting the songs, See Note #1.1
+                    @Override // @Override so I can override the compare() function from the comparator
+                    public int compare(Song s1, Song s2) {
+                        // Push songs with unknown artists to the bottom of the playlist
+                        boolean isUnknownA1 = s1.getArtist().equals("UnknownArtist");
+                        boolean isUnknownA2 = s2.getArtist().equals("UnknownArtist");
+                        if (isUnknownA1 != isUnknownA2) {
+                            return isUnknownA1 ? 1 : -1; // Using a ternary operator (pretty much just a shorthand if-else), return wether or not the song is unknown or not, See Note #1.2
+                        }
+                        // Group songs by artist
+                        if (!isUnknownA1) {
+                            int artistCompare = s1.getArtist().compareToIgnoreCase(s2.getArtist()); // Compare one artist to another for sorting
+                            if (artistCompare != 0)
+                                return artistCompare; // If they arent the same, return the comparison, See Note #1.3
+                        }
+                        // Push songs with unknown album to the bottom of the artist group
+                        boolean isUnknownAl1 = s1.getAlbum().equals("UnknownAlbum");
+                        boolean isUnknownAl2 = s2.getAlbum().equals("UnknownAlbum");
+                        if (isUnknownAl1 != isUnknownAl2) {
+                            return isUnknownAl1 ? 1 : -1; // Check if album is unknown
+                        }
+                        if (!isUnknownAl1) {
+                            int albumCompare = s1.getAlbum().compareToIgnoreCase(s2.getAlbum()); // Compare one album to another for sorting 
+                            if (albumCompare != 0)
+                                return albumCompare; // Return the comparison
+                        }
+
+                        // Push songs with unknown track to the bottom of the album group, logic explained in the previous comments
+                        boolean isUnknownT1 = s1.getTrack().equals("UnknownTrack");
+                        boolean isUnknownT2 = s2.getTrack().equals("UnknownTrack");
+                        if (isUnknownT1 != isUnknownT2) {
+                            return isUnknownT1 ? 1 : -1;
+                        }
+                        if (!isUnknownT1) {
+                            return s1.getTrack().compareTo(s2.getTrack());
+                        }
+
+                        return s1.getTitle().compareToIgnoreCase(s2.getTitle()); // Fallback to sorting by title if the data is the same
+                    }
+                });
+
+                // Assign tracks to artistless songs
+                int artistlessTrackCounter = 1;
+                for (Song song : playlistSongs) {
+                    if (song.getArtist().equals("UnknownArtist")) {
+                        song.setTrack(String.format("%02d", artistlessTrackCounter++));
+                    }
+                }
+            }
+
+            // Processing file transfers and adding songs to the M3u
+            for (Song song : playlistSongs) {
+                File sourceFile = new File(song.getPath()); // Get the source file
+
+                if (playlist) {
+                    String songFileName = String.format("%s_%s_%s_%s.mp3", song.getArtist(), song.getAlbum(),
+                            song.getTrack(), song.getTitle()); // Format the song file name
+                    File dest = new File(parentDir.getPath() + "/" + songFileName); // Get the destination file for copying
+
+                    if (dest.exists()) {
+                        try (Song tmp = new Song(dest)) {
+                            if (!tmp.getData().equals(song.getData())) { // Handle renaming the song file if there are duplicates of the same song with different data
+                                System.err.println(
+                                        "DEBUG: Renaming file with same name but different data: " + dest.getName());
+                                int i = 0;
+                                while (dest.exists()) {
+                                    i++;
+                                    String alternativeTitle = song.getTitle() + String.format("%02d", i); // Add a number to the file name, to signify that its a different song
+                                    songFileName = String.format("%s_%s_%s_%s.mp3", song.getArtist(), song.getAlbum(),
+                                            song.getTrack(), alternativeTitle);
+                                    dest = new File(parentDir.getPath() + "/" + songFileName);
+                                }
+                                song.setTitle(song.getTitle() + String.format("%02d", i));
+                            } else {
+                                System.err.println("DEBUG: Deleting already existing file: " + dest.getName());
+                                dest.delete(); // Delete any duplicates with the same data and title
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    if (!dest.exists()) {
+                        Path destPath = Paths.get(dest.getPath()); // Convert to paths for Java.nio.File
+                        Path sourcePath = Paths.get(song.getPath());
+                        Files.copy(sourcePath, destPath, StandardCopyOption.COPY_ATTRIBUTES); // Copy the song data over to the newly created fi;e
+                    }
+
+                    try (Song playlistSong = new Song(dest)) { // Write the song to the M3u
+                        writeSongEntry(playlistSong, sourceFile.getPath());
+                    }
+                }
+            }
+
+        } finally {
+            // Close all the resources
+            for (Song song : playlistSongs) {
+                if (song != null) {
+                    song.close();
+                    System.err.println("DEBUG: PLAYLISTSONGS: Closed song used for comparing");
+                }
+            }
+            if (m3uWriter != null) {
+                m3uWriter.close();
+                System.err.println("DEBUG: M3UWRITER: Closed");
+            }
+            if (sourceM3uWriter != null) {
+                sourceM3uWriter.close();
+                System.err.println("DEBUG: SOURCEWRITER: Closed");
+            }
         }
     }
 }
