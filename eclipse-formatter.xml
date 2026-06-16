@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<profiles version="12">
+    <profile kind="CodeFormatterProfile" name="No Comment Wrapping" version="12">
+        <!-- Disables line wrapping for single-line (//) comments -->
+        <setting id="org.eclipse.jdt.core.formatter.comment.line_length" value="999"/>
+        <!-- Disables line wrapping for block (/* */) comments -->
+        <setting id="org.eclipse.jdt.core.formatter.comment.block_length" value="999"/>
+        <!-- Disables line wrapping for Javadocs -->
+        <setting id="org.eclipse.jdt.core.formatter.comment.format_javadoc_comments" value="false"/>
+        <setting id="org.eclipse.jdt.core.formatter.comment.format_line_comments" value="false"/>
+        <setting id="org.eclipse.jdt.core.formatter.comment.format_block_comments" value="false"/>
+    </profile>
+</profiles>

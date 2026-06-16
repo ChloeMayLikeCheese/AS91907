@@ -6,24 +6,59 @@
 
 # Ignore Kotlin plugin data
 .kotlin
+.gradle
 
-.vscode
-gradle
-gradle.properties
-gradlew
-gradlew.bat
-runner.sh
-settings.gradle
-app/build.gradle
-app/src/test
-app/src/main/resources
-app/local-lib
-app/build/classes
-app/build/generated
-app/build/resources
-app/build/tmp
-eclipse-formatter.xml
+**/build/
+!**/src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrapper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
+# Eclipse Gradle plugin generated files
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+!*.code-workspace
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# .vscode
+# gradle
+# gradle.properties
+# gradlew
+# gradlew.bat
+# runner.sh
+# settings.gradle
+# app/build.gradle
+#app/src/test
+# app/src/main/resources
+# app/local-lib
+# app/build/classes
+# app/build/generated
+# app/build/resources
+# app/build/tmp
+# eclipse-formatter.xml
 library/
 test
-playlists
-app/FITS_HOME
+# playlists
+# app/FITS_HOME
+# .project
+# app/.classpath

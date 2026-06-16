@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Main class for an MP3 player
-Date: 09\06\2026
+Date: 17\06\2026
 Notes are located at the bottom of the file
 */
 package org.AS91907;
@@ -26,8 +26,8 @@ import com.mpatric.mp3agic.UnsupportedTagException;
 import javazoom.jl.decoder.JavaLayerException;
 
 public class Main {
-    public static File library = new File("library/");
-    public static File playlists = new File("playlists/");
+    public static final File library = new File("library/");
+    public static final File playlists = new File(library.getPath() + "/playlists/");
 
     enum Operation {
         DEBUG_CLEAR_FOLDERS, DEBUG_MESSAGE, QUIT, CREATE_PLAYLIST
@@ -50,26 +50,26 @@ public class Main {
             keyMap.bind(Operation.DEBUG_MESSAGE, " ");
             keyMap.bind(Operation.CREATE_PLAYLIST, "c");
 
-            // try (M3u test = new M3u("test")) {
-            //     test.createPlaylist();
-            //     test.addAll("test");
-            // }
+/*             try (M3u test = new M3u("test")) {
+                test.createPlaylist();
+                test.addAll("test");
+            }
 
-            // try (Song a = new Song("test/Slavian - Slavian - Phantoms Over Japan | ファントムオーバー日本.mp3")) {
-            //     terminal.writer().println(a.getData());
-            //     terminal.writer().flush();
-            // }
-
-            // try (Song a = new Song("test/a-5sec.mp3")) {
-            // Song a = new Song("test/a-5sec.mp3");
-            // a.play();
+            try (Song a = new Song("test/Kino - Звезда по имени Солнце.mp3")) {
+                terminal.writer().println(a.getData());
+                terminal.writer().flush();
+            }
+        
+            try (Song a = new Song("test/a-5sec.mp3")) {
+            // a = new Song("test/a-5sec.mp3");
+            a.play();
             // Thread.sleep(1000);
             // terminal.writer().println(a.getCurrentPosition());
             // a.pause();
 
             // terminal.writer().println(a.getData());
             // terminal.writer().flush();
-            // }
+           } */
 
             // Main input loop
             boolean isReading = true;
@@ -94,6 +94,7 @@ public class Main {
                     }
                     }
                 }
+
             }
 
         }
@@ -136,7 +137,7 @@ public class Main {
         if (file.isDirectory()) { // Check if the file passed is a directory
             for (File c : file.listFiles()) { // Recursively delete its contents
                 if (c.isDirectory()) { // Check to see if any of the contents are a directory, if so call deleteDir() recursively
-                                       
+
                     deleteDir(c);
                 } else {
                     c.delete();
@@ -151,10 +152,12 @@ public class Main {
         if (!library.mkdir()) {
             deleteDir(library);
             System.err.println("DEBUG: INIT: Refreshing library...");
+            library.mkdir();
         }
         if (!playlists.mkdir()) {
             deleteDir(playlists);
             System.err.println("DEBUG: INIT: Refreshing playlists...");
+            playlists.mkdir();
         }
         System.err.println("DEBUG: INIT: Init finished");
     }

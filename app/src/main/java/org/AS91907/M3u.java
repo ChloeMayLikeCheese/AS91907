@@ -1,7 +1,7 @@
 /*
 Author: Chloe T (https://github.com/ChloeMayLikeCheese)
 Purpose: Class for creating and managing .m3u playlist files
-Date: 09\06\2026
+Date: 17\06\2026
 */
 package org.AS91907;
 
@@ -11,10 +11,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -26,11 +22,8 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
     private String name;
     boolean playlist = false;
     private File m3u;
-    private File sourceM3u;
     private File parentDir;
-    private File m3uDir;
     private BufferedWriter m3uWriter; // BufferedWriter is just a more efficient way of writing to files, via an output stream
-    private BufferedWriter sourceM3uWriter;
     private final List<Song> playlistSongs = new ArrayList<>();
     // Constructor
 
@@ -41,47 +34,28 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
     // Function for creating the file
     public void create(String parentDirPath) throws IOException {
         parentDir = new File(parentDirPath);
-        m3uDir = new File(parentDirPath + "/m3us");
         if (!parentDir.exists()) {
             parentDir.mkdirs();
         }
-        if (!m3uDir.exists()) {
-            m3uDir.mkdirs();
-        }
-        m3u = new File(m3uDir, name + ".m3u");
+        m3u = new File(parentDir, name + ".m3u");
         m3uWriter = new BufferedWriter(new FileWriter(m3u));
         m3uWriter.write("#EXTM3U");
         m3uWriter.flush();
-
-        sourceM3u = new File(m3uDir, name + "_SOURCE.m3u");
-        sourceM3uWriter = new BufferedWriter(new FileWriter(sourceM3u));
-        sourceM3uWriter.write("#EXTM3U");
-        sourceM3uWriter.flush();
     }
 
     public void createPlaylist() throws IOException {
         playlist = true;
-        parentDir = new File("playlists/" + name);
-        m3uDir = new File(parentDir + "/m3us");
+        parentDir = new File("library/playlists/" + name);
         if (!parentDir.exists()) {
             parentDir.mkdirs();
         }
-        if (!m3uDir.exists()) {
-            m3uDir.mkdirs();
-        }
-        m3u = new File(m3uDir, name + ".m3u");
+        m3u = new File(parentDir, name + ".m3u");
         m3uWriter = new BufferedWriter(new FileWriter(m3u));
         m3uWriter.write("#EXTM3U");
         m3uWriter.newLine();
         m3uWriter.write("#PLAYLIST:" + name);
         m3uWriter.flush();
 
-        sourceM3u = new File(m3uDir, name + "_SOURCE.m3u");
-        sourceM3uWriter = new BufferedWriter(new FileWriter(sourceM3u));
-        sourceM3uWriter.write("#EXTM3U");
-        sourceM3uWriter.newLine();
-        sourceM3uWriter.write("#PLAYLIST:" + name);
-        sourceM3uWriter.flush();
     }
 
     // Functions for adding a single song to the m3u file
@@ -89,10 +63,11 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
     public void add(Song song)
             throws IOException, UnsupportedTagException, InvalidDataException, InvalidAudioFormatException {
         if (song != null) {
+            System.err.println("DEBUG: M3U: Adding song..." + song.getFileName());
             playlistSongs.add(song);
+            System.err.println("DEBUG: M3U: Added song" + song.getFileName());
         }
     }
-
 
     public void add(File song)
             throws IOException, InvalidAudioFormatException, UnsupportedTagException, InvalidDataException {
@@ -157,12 +132,6 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
         m3uWriter.write(songData);
         m3uWriter.write(song.getPath());
         m3uWriter.flush();
-
-        sourceM3uWriter.newLine();
-        sourceM3uWriter.newLine();
-        sourceM3uWriter.write(songData);
-        sourceM3uWriter.write(sourcePath);
-        sourceM3uWriter.flush();
     }
 
     @Override // @Override allows me to call the close() function from the interface AutoCloseable, and then implement my own behavior on top of that 
@@ -208,8 +177,8 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
                         }
 
                         // Push songs with unknown track to the bottom of the album group, logic explained in the previous comments
-                        boolean isUnknownT1 = s1.getTrack().equals("UnknownTrack");
-                        boolean isUnknownT2 = s2.getTrack().equals("UnknownTrack");
+                        boolean isUnknownT1 = s1.getTrack().equals("00");
+                        boolean isUnknownT2 = s2.getTrack().equals("00");
                         if (isUnknownT1 != isUnknownT2) {
                             return isUnknownT1 ? 1 : -1;
                         }
@@ -235,10 +204,18 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
                 File sourceFile = new File(song.getPath()); // Get the source file
 
                 if (playlist) {
+                    try (Song playlistSong = new Song(sourceFile)) { // Write the song to the M3u
+                        writeSongEntry(playlistSong, sourceFile.getPath());
+                    }
+
+
+                    /*                     
+                    Code for creating a new mp3 with a formatted file name in the playlist file, realized it was redundent.
+
                     String songFileName = String.format("%s_%s_%s_%s.mp3", song.getArtist(), song.getAlbum(),
                             song.getTrack(), song.getTitle()); // Format the song file name
                     File dest = new File(parentDir.getPath() + "/" + songFileName); // Get the destination file for copying
-
+                    
                     if (dest.exists()) {
                         try (Song tmp = new Song(dest)) {
                             if (!tmp.getData().equals(song.getData())) { // Handle renaming the song file if there are duplicates of the same song with different data
@@ -261,16 +238,14 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
                             e.printStackTrace();
                         }
                     }
-
+                    
                     if (!dest.exists()) {
+                        System.err.println("DEBUG: M3U: Copying data to new file" + dest.getName());
                         Path destPath = Paths.get(dest.getPath()); // Convert to paths for Java.nio.File
                         Path sourcePath = Paths.get(song.getPath());
                         Files.copy(sourcePath, destPath, StandardCopyOption.COPY_ATTRIBUTES); // Copy the song data over to the newly created fi;e
-                    }
+                    } */
 
-                    try (Song playlistSong = new Song(dest)) { // Write the song to the M3u
-                        writeSongEntry(playlistSong, sourceFile.getPath());
-                    }
                 }
             }
 
@@ -279,17 +254,15 @@ public class M3u implements AutoCloseable { // So I can use a try block with res
             for (Song song : playlistSongs) {
                 if (song != null) {
                     song.close();
-                    System.err.println("DEBUG: PLAYLISTSONGS: Closed song used for comparing");
+                    System.err.println("DEBUG: M3U: Closed song used for comparing");
                 }
             }
             if (m3uWriter != null) {
                 m3uWriter.close();
                 System.err.println("DEBUG: M3UWRITER: Closed");
             }
-            if (sourceM3uWriter != null) {
-                sourceM3uWriter.close();
-                System.err.println("DEBUG: SOURCEWRITER: Closed");
-            }
+
+            System.err.println("DEBUG: M3U: Closed");
         }
     }
 }
